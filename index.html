@@ -457,7 +457,7 @@ function goToQuiz() {
 // AI LOOKUP
 // ═══════════════════════════════════════
 async function lookupWord(word) {
-  const res = await fetch('https://red-wildflower-64a2.bbnn47.workers.dev', {
+  const res = await fetch('https://vocabflix.bbnn47.workers.dev/api', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ word: word.trim() })
