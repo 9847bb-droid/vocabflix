@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="VocabFlix">
+<meta name="theme-color" content="#E50914">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>VocabFlix</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E50914;
+    --dark: #0a0a0a;
+    --card: #141414;
+    --card2: #1e1e1e;
+    --text: #f0f0f0;
+    --muted: #888;
+    --green: #46d369;
+    --yellow: #f5c518;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--dark); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+header {
+background: linear-gradient(to bottom, #000 0%, transparent 100%);
+padding: 18px 20px 10px;
+display: flex; align-items: center; justify-content: space-between;
+position: sticky; top: 0; z-index: 100;
+}
+.logo { font-family: ‘Bebas Neue’, sans-serif; font-size: 26px; color: var(–red); letter-spacing: 2px; }
+.logo span { color: #fff; }
+
+/* ── BANNER ── */
+.quiz-banner {
+display: none;
+background: linear-gradient(135deg, #2a0800, #1a0500);
+border-bottom: 2px solid var(–red);
+padding: 14px 20px;
+cursor: pointer;
+animation: pulse-border 2s infinite;
+}
+.quiz-banner.visible { display: flex; align-items: center; gap: 12px; }
+@keyframes pulse-border {
+0%,100% { border-bottom-color: var(–red); }
+50% { border-bottom-color: #ff4444; }
+}
+.banner-icon { font-size: 24px; flex-shrink: 0; }
+.banner-text { flex: 1; }
+.banner-title { font-size: 14px; font-weight: 600; color: #fff; }
+.banner-sub { font-size: 12px; color: #ff9999; margin-top: 2px; }
+.banner-btn {
+background: var(–red); color: #fff; border: none; border-radius: 6px;
+padding: 8px 14px; font-family: ‘Bebas Neue’, sans-serif; font-size: 16px;
+letter-spacing: 1px; cursor: pointer; flex-shrink: 0;
+}
+
+/* ── NOTIF PROMPT ── */
+.notif-prompt {
+display: none;
+background: #1a1400;
+border-bottom: 1px solid #443300;
+padding: 12px 16px;
+align-items: center;
+gap: 10px;
+}
+.notif-prompt.visible { display: flex; }
+.notif-prompt p { flex: 1; font-size: 12px; color: #ccc; line-height: 1.4; }
+.notif-prompt p strong { color: var(–yellow); }
+.btn-notif-allow {
+background: var(–yellow); color: #000; border: none; border-radius: 6px;
+padding: 8px 12px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+}
+.btn-notif-deny {
+background: none; border: none; color: #555; font-size: 18px; cursor: pointer; flex-shrink: 0;
+}
+
+nav {
+display: flex; background: #0d0d0d; border-bottom: 1px solid #222;
+overflow-x: auto; scrollbar-width: none;
+}
+nav::-webkit-scrollbar { display: none; }
+nav button {
+flex: 1; min-width: 72px; padding: 13px 6px;
+background: none; border: none; color: var(–muted);
+font-family: ‘DM Sans’, sans-serif; font-size: 12px; font-weight: 500;
+cursor: pointer; transition: color .2s; position: relative; white-space: nowrap;
+}
+nav button.active { color: #fff; }
+nav button.active::after {
+content: ‘’; position: absolute; bottom: 0; left: 20%; right: 20%;
+height: 2px; background: var(–red); border-radius: 2px;
+}
+
+.page { display: none; padding: 20px 16px 100px; }
+.page.active { display: block; }
+
+/* ── ADD WORD ── */
+.add-form { background: var(–card); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.add-form h2 { font-size: 14px; color: var(–muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+.input-row { display: flex; gap: 10px; }
+input[type=“text”] {
+flex: 1; background: var(–card2); border: 1px solid #333; border-radius: 8px;
+color: #fff; font-family: ‘DM Sans’, sans-serif; font-size: 16px; padding: 14px 16px;
+outline: none; transition: border-color .2s;
+}
+input[type=“text”]:focus { border-color: var(–red); }
+input[type=“text”]::placeholder { color: #555; }
+.btn-add {
+background: var(–red); color: #fff; border: none; border-radius: 8px;
+padding: 14px 20px; font-family: ‘Bebas Neue’, sans-serif; font-size: 18px;
+letter-spacing: 1px; cursor: pointer; transition: opacity .2s; white-space: nowrap;
+}
+.btn-add:active { opacity: .7; }
+.btn-add:disabled { opacity: .4; }
+
+.loading-dots::after { content: ‘’; animation: dots 1.2s infinite; }
+@keyframes dots { 0% { content: ‘.’; } 33% { content: ‘..’; } 66% { content: ‘…’; } }
+
+/* ── PREVIEW ── */
+.preview-card {
+background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
+padding: 18px; margin-top: 14px; animation: fadeIn .3s ease;
+}
+.preview-word { font-family: ‘Bebas Neue’, sans-serif; font-size: 32px; color: #fff; letter-spacing: 1px; line-height: 1; }
+.preview-pos { font-size: 12px; color: var(–muted); margin-top: 4px; }
+.preview-meaning { font-size: 16px; color: var(–yellow); font-weight: 600; margin: 12px 0 10px; }
+.preview-example { font-size: 13px; color: #888; font-style: italic; line-height: 1.5; }
+.preview-example-ko { font-size: 12px; color: #555; margin-top: 4px; }
+.preview-actions { display: flex; gap: 10px; margin-top: 14px; }
+.btn-confirm {
+flex: 2; background: var(–green); color: #000; border: none; border-radius: 8px;
+padding: 14px; font-family: ‘Bebas Neue’, sans-serif; font-size: 18px;
+letter-spacing: 1px; cursor: pointer;
+}
+.btn-cancel {
+flex: 1; background: #2a2a2a; color: var(–muted); border: none; border-radius: 8px;
+padding: 14px; font-family: ‘DM Sans’, sans-serif; font-size: 14px; cursor: pointer;
+}
+
+.section-title { font-size: 12px; color: var(–muted); text-transform: uppercase; letter-spacing: 1.5px; margin: 20px 0 10px; }
+
+.word-card {
+background: var(–card); border-radius: 10px; padding: 16px; margin-bottom: 10px;
+display: flex; align-items: center; gap: 12px; animation: fadeIn .3s ease;
+}
+@keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: none; } }
+.word-text { font-size: 18px; font-weight: 600; color: #fff; }
+.word-meaning { font-size: 13px; color: var(–muted); margin-top: 3px; }
+.word-example { font-size: 12px; color: #555; margin-top: 4px; font-style: italic; }
+.badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: #222; color: var(–muted); white-space: nowrap; }
+.badge.due { background: #2a1500; color: var(–yellow); }
+.badge.done { background: #0a2a0a; color: var(–green); }
+.delete-btn { background: none; border: none; color: #444; font-size: 18px; cursor: pointer; padding: 4px; line-height: 1; }
+.delete-btn:active { color: var(–red); }
+
+/* ── QUIZ ── */
+.quiz-wrap { display: flex; flex-direction: column; align-items: center; min-height: 70vh; justify-content: center; }
+.quiz-meta { font-size: 12px; color: var(–muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; text-align: center; }
+.quiz-card {
+background: var(–card); border-radius: 16px; width: 100%; max-width: 400px;
+padding: 36px 28px; text-align: center; margin-bottom: 24px;
+position: relative; overflow: hidden;
+}
+.quiz-card::before { content: ‘’; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(–red); }
+.quiz-prompt-label { font-size: 11px; color: var(–muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+.quiz-prompt { font-family: ‘Bebas Neue’, sans-serif; font-size: 48px; color: #fff; letter-spacing: 2px; line-height: 1.1; margin-bottom: 8px; }
+.quiz-prompt.meaning-prompt { font-family: ‘DM Sans’, sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0; }
+.quiz-input-wrap { width: 100%; max-width: 400px; }
+.quiz-input-wrap input { width: 100%; text-align: center; font-size: 18px; }
+.quiz-result { width: 100%; max-width: 400px; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 16px; animation: fadeIn .3s ease; }
+.quiz-result.correct { background: #0a2a0a; border: 1px solid #1a5a1a; }
+.quiz-result.wrong { background: #2a0a0a; border: 1px solid #5a1a1a; }
+.result-icon { font-size: 32px; margin-bottom: 8px; }
+.result-word { font-size: 20px; font-weight: 700; }
+.result-meaning { font-size: 14px; color: var(–muted); margin-top: 6px; }
+.btn-row { display: flex; gap: 10px; width: 100%; max-width: 400px; }
+.btn-quiz { flex: 1; background: var(–red); color: #fff; border: none; border-radius: 10px; padding: 16px; font-family: ‘Bebas Neue’, sans-serif; font-size: 20px; letter-spacing: 1px; cursor: pointer; }
+.btn-quiz.secondary { background: var(–card2); color: var(–muted); }
+.no-quiz { text-align: center; padding: 60px 20px; }
+.no-quiz .icon { font-size: 48px; margin-bottom: 16px; }
+.no-quiz h3 { font-size: 20px; margin-bottom: 8px; }
+.no-quiz p { color: var(–muted); font-size: 14px; line-height: 1.6; }
+
+/* ── STATS ── */
+.stats-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+.stat-box { flex: 1; background: var(–card); border-radius: 10px; padding: 14px 10px; text-align: center; }
+.stat-num { font-family: ‘Bebas Neue’, sans-serif; font-size: 28px; color: var(–red); line-height: 1; }
+.stat-label { font-size: 11px; color: var(–muted); margin-top: 3px; }
+.progress-bar-wrap { margin-bottom: 8px; }
+.progress-bar { height: 3px; background: #222; border-radius: 3px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: var(–red); border-radius: 3px; transition: width .4s ease; }
+.progress-label { font-size: 12px; color: var(–muted); margin-top: 4px; text-align: right; }
+.empty-state { text-align: center; padding: 40px 20px; color: var(–muted); font-size: 14px; }
+
+/* ── SCHEDULE ── */
+.schedule-header { background: var(–card); border-radius: 12px; padding: 16px; margin-bottom: 16px; display: flex; gap: 12px; align-items: center; }
+.timeline { position: relative; padding-left: 28px; }
+.timeline::before { content: ‘’; position: absolute; left: 9px; top: 0; bottom: 0; width: 2px; background: #222; }
+.tl-item { position: relative; margin-bottom: 16px; }
+.tl-dot { position: absolute; left: -24px; top: 14px; width: 10px; height: 10px; border-radius: 50%; background: #333; border: 2px solid #444; }
+.tl-card { background: var(–card); border-radius: 10px; padding: 14px 16px; }
+.tl-day { font-size: 12px; color: var(–muted); margin-bottom: 4px; }
+.tl-quiz-type { font-size: 14px; font-weight: 600; }
+
+/* ── BACKUP ── */
+.backup-section { background: var(–card); border-radius: 12px; padding: 18px; margin-top: 20px; }
+.backup-section h3 { font-size: 14px; color: var(–muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
+.backup-row { display: flex; gap: 10px; }
+.btn-backup {
+flex: 1; background: #222; color: #ccc; border: 1px solid #333; border-radius: 8px;
+padding: 12px 10px; font-family: ‘DM Sans’, sans-serif; font-size: 13px; font-weight: 500;
+cursor: pointer; text-align: center; display: block;
+}
+.btn-backup.import { color: var(–yellow); border-color: #443300; }
+
+/* ── TOAST ── */
+.toast {
+position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+background: #222; color: #fff; padding: 12px 20px; border-radius: 8px;
+font-size: 14px; opacity: 0; transition: all .3s; z-index: 999; white-space: nowrap; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+
+</head>
+<body>
+
+<header>
+  <div class="logo">VOCAB<span>FLiX</span></div>
+  <div style="font-size:12px;color:var(--muted)" id="due-count-badge"></div>
+</header>
+
+<!-- 알림 허용 프롬프트 -->
+
+<div class="notif-prompt" id="notif-prompt">
+  <div style="font-size:20px">🔔</div>
+  <p><strong>복습 알림</strong>을 허용하면 오후 12시부터 2시간마다 알림을 받을 수 있어요.</p>
+  <button class="btn-notif-allow" onclick="requestNotifPermission()">허용</button>
+  <button class="btn-notif-deny" onclick="dismissNotifPrompt()">✕</button>
+</div>
+
+<!-- 퀴즈 배너 -->
+
+<div class="quiz-banner" id="quiz-banner" onclick="goToQuiz()">
+  <div class="banner-icon">🔔</div>
+  <div class="banner-text">
+    <div class="banner-title">복습할 단어가 있어요!</div>
+    <div class="banner-sub" id="banner-sub">지금 퀴즈를 풀어보세요</div>
+  </div>
+  <button class="banner-btn">풀기</button>
+</div>
+
+<nav>
+  <button class="active" id="nav-add" onclick="showPage('add',this)">➕ 단어추가</button>
+  <button id="nav-quiz" onclick="showPage('quiz',this)">🎯 퀴즈</button>
+  <button id="nav-list" onclick="showPage('list',this)">📚 단어장</button>
+  <button id="nav-schedule" onclick="showPage('schedule',this)">📅 일정</button>
+</nav>
+
+<!-- ADD -->
+
+<div id="page-add" class="page active">
+  <div class="add-form">
+    <h2>영어 단어 저장</h2>
+    <div class="input-row">
+      <input type="text" id="word-input" placeholder="영어 단어 입력 (예: resilient)" onkeydown="if(event.key==='Enter')searchWord()">
+      <button class="btn-add" onclick="searchWord()" id="add-btn">검색</button>
+    </div>
+    <div id="preview-area"></div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-label">저장 단어</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-due" style="color:var(--yellow)">0</div><div class="stat-label">복습 예정</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-done" style="color:var(--green)">0</div><div class="stat-label">완료</div></div>
+  </div>
+  <div id="recent-words"></div>
+  <div class="backup-section">
+    <h3>💾 데이터 백업</h3>
+    <div class="backup-row">
+      <button class="btn-backup" onclick="exportData()">📤 JSON 내보내기</button>
+      <label class="btn-backup import" style="cursor:pointer">
+        📥 JSON 불러오기
+        <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+      </label>
+    </div>
+    <div style="font-size:11px;color:#444;margin-top:10px;line-height:1.5">백업 파일을 만들어두면 폰을 바꿔도 복원할 수 있어요.</div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+
+<div id="page-quiz" class="page"><div id="quiz-container"></div></div>
+
+<!-- LIST -->
+
+<div id="page-list" class="page"><div id="word-list-container"></div></div>
+
+<!-- SCHEDULE -->
+
+<div id="page-schedule" class="page"><div id="schedule-container"></div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// SERVICE WORKER 등록
+// ═══════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(console.error);
+  });
+}
+
+// ═══════════════════════════════════════
+// IndexedDB
+// ═══════════════════════════════════════
+const DB_NAME = 'vocabflix_db';
+const DB_VER = 1;
+const STORE = 'words';
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath: 'id' });
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = reject;
+  });
+}
+const dbGetAll = () => new Promise((res, rej) => {
+  const req = db.transaction(STORE,'readonly').objectStore(STORE).getAll();
+  req.onsuccess = () => res(req.result || []);
+  req.onerror = rej;
+});
+const dbPut = w => new Promise((res, rej) => {
+  const req = db.transaction(STORE,'readwrite').objectStore(STORE).put(w);
+  req.onsuccess = res; req.onerror = rej;
+});
+const dbDel = id => new Promise((res, rej) => {
+  const req = db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);
+  req.onsuccess = res; req.onerror = rej;
+});
+async function loadWords() {
+  if (!db) return [];
+  return (await dbGetAll()).sort((a,b) => b.addedAt - a.addedAt);
+}
+
+// ═══════════════════════════════════════
+// SCHEDULE
+// ═══════════════════════════════════════
+const SCHEDULE = [
+  { day:1,  type:'meaning_to_word', label:'+1일' },
+  { day:2,  type:'word_to_meaning', label:'+2일' },
+  { day:5,  type:'meaning_to_word', label:'+5일' },
+  { day:10, type:'word_to_meaning', label:'+10일' },
+];
+
+async function getDueItems() {
+  const words = await loadWords();
+  const due = [];
+  words.forEach(w => {
+    SCHEDULE.forEach((s,si) => {
+      if (w.completedSteps && w.completedSteps.includes(si)) return;
+      if (Date.now() >= w.addedAt + s.day * 86400000) due.push({ word:w, stepIndex:si, type:s.type });
+    });
+  });
+  return due;
+}
+
+// ═══════════════════════════════════════
+// PUSH NOTIFICATIONS
+// ═══════════════════════════════════════
+function shouldShowNotifPrompt() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted' || Notification.permission === 'denied') return false;
+  if (localStorage.getItem('vf_notif_dismissed')) return false;
+  return true;
+}
+
+function dismissNotifPrompt() {
+  localStorage.setItem('vf_notif_dismissed', '1');
+  document.getElementById('notif-prompt').classList.remove('visible');
+}
+
+async function requestNotifPermission() {
+  const perm = await Notification.requestPermission();
+  document.getElementById('notif-prompt').classList.remove('visible');
+  if (perm === 'granted') {
+    showToast('알림이 설정됐어요! 🔔');
+    scheduleLocalReminders();
+  } else {
+    showToast('알림이 거부됐어요');
+  }
+}
+
+// iOS Safari는 Web Push를 지원하지만 VAPID 서버 없이는 로컬 알림만 가능
+// 앱이 열려있을 때 타이머 기반으로 알림 스케줄링
+function scheduleLocalReminders() {
+  // Clear existing
+  if (window._reminderInterval) clearInterval(window._reminderInterval);
+
+  const checkAndAlert = async () => {
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour < 12) return; // 오후 12시 이전엔 알림 없음
+
+    if (Notification.permission !== 'granted') return;
+    const due = await getDueItems();
+    if (!due.length) return;
+
+    const lastNotif = parseInt(localStorage.getItem('vf_last_notif') || '0');
+    const twoHours = 2 * 60 * 60 * 1000;
+    if (Date.now() - lastNotif < twoHours) return;
+
+    localStorage.setItem('vf_last_notif', Date.now().toString());
+    new Notification('VocabFlix 복습 알림 🔔', {
+      body: `미완료 퀴즈 ${due.length}개가 있어요. 지금 복습하세요!`,
+      icon: '/icon-192.png',
+      tag: 'quiz-reminder'
+    });
+  };
+
+  // Check every 5 minutes (알림 조건은 2시간마다)
+  window._reminderInterval = setInterval(checkAndAlert, 5 * 60 * 1000);
+  checkAndAlert(); // immediate check
+}
+
+// ═══════════════════════════════════════
+// QUIZ BANNER
+// ═══════════════════════════════════════
+async function checkQuizBanner() {
+  const now = new Date();
+  if (now.getHours() < 12) { hideBanner(); return; }
+  const due = await getDueItems();
+  if (!due.length) { hideBanner(); return; }
+  const lastDismiss = parseInt(localStorage.getItem('vf_banner_dismiss') || '0');
+  if (Date.now() - lastDismiss < 2 * 60 * 60 * 1000) { hideBanner(); return; }
+  document.getElementById('banner-sub').textContent = `미완료 퀴즈 ${due.length}개 — 지금 바로 복습하세요!`;
+  document.getElementById('quiz-banner').classList.add('visible');
+}
+function hideBanner() { document.getElementById('quiz-banner').classList.remove('visible'); }
+function goToQuiz() {
+  localStorage.setItem('vf_banner_dismiss', Date.now().toString());
+  hideBanner();
+  showPage('quiz', document.getElementById('nav-quiz'));
+}
+
+// ═══════════════════════════════════════
+// AI LOOKUP
+// ═══════════════════════════════════════
+async function lookupWord(word) {
+  const res = await fetch('https://red-wildflower-64a2.bbnn47.workers.dev', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ word: word.trim() })
+  });
+  return await res.json();
+}
+
+// ═══════════════════════════════════════
+// SEARCH → PREVIEW
+// ═══════════════════════════════════════
+let pendingWord = null;
+
+async function searchWord() {
+  const input = document.getElementById('word-input');
+  const btn = document.getElementById('add-btn');
+  const previewArea = document.getElementById('preview-area');
+  const word = input.value.trim();
+  if (!word) return;
+
+  const words = await loadWords();
+  if (words.find(w => w.word.toLowerCase() === word.toLowerCase())) {
+    showToast('이미 저장된 단어예요!'); return;
+  }
+
+  btn.disabled = true; btn.textContent = '...';
+  previewArea.innerHTML = `<div style="margin-top:14px;font-size:13px;color:var(--muted)"><span class="loading-dots">AI가 뜻을 찾는 중</span></div>`;
+
+  try {
+    const info = await lookupWord(word);
+    pendingWord = {
+      id: Date.now(),
+      word: info.word || word,
+      meaning_ko: info.meaning_ko,
+      pos: info.pos,
+      example: info.example,
+      example_ko: info.example_ko,
+      addedAt: Date.now(),
+      completedSteps: []
+    };
+    previewArea.innerHTML = `
+      <div class="preview-card">
+        <div class="preview-word">${pendingWord.word}</div>
+        <div class="preview-pos">${pendingWord.pos||''}</div>
+        <div class="preview-meaning">${pendingWord.meaning_ko}</div>
+        ${pendingWord.example ? `<div class="preview-example">"${pendingWord.example}"</div>` : ''}
+        ${pendingWord.example_ko ? `<div class="preview-example-ko">${pendingWord.example_ko}</div>` : ''}
+        <div class="preview-actions">
+          <button class="btn-confirm" onclick="confirmAdd()">✓ 단어장에 추가</button>
+          <button class="btn-cancel" onclick="cancelAdd()">추가 안 함</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    previewArea.innerHTML = `<div style="margin-top:14px;font-size:13px;color:var(--red)">오류가 발생했어요. 다시 시도해주세요.</div>`;
+  }
+  btn.disabled = false; btn.textContent = '검색';
+}
+
+async function confirmAdd() {
+  if (!pendingWord) return;
+  await dbPut(pendingWord);
+  pendingWord = null;
+  document.getElementById('word-input').value = '';
+  document.getElementById('preview-area').innerHTML = '';
+  showToast('단어장에 추가됐어요 ✓');
+  await updateStats(); await renderRecentWords();
+}
+
+function cancelAdd() {
+  pendingWord = null;
+  document.getElementById('word-input').value = '';
+  document.getElementById('preview-area').innerHTML = '';
+  showToast('추가하지 않았어요');
+}
+
+// ═══════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════
+async function updateStats() {
+  const words = await loadWords();
+  const due = await getDueItems();
+  const done = words.filter(w => w.completedSteps && w.completedSteps.length >= SCHEDULE.length).length;
+  document.getElementById('stat-total').textContent = words.length;
+  document.getElementById('stat-due').textContent = due.length;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('due-count-badge').textContent = due.length > 0 ? `🔔 복습 ${due.length}개` : '';
+}
+
+async function renderRecentWords() {
+  const words = (await loadWords()).slice(0,5);
+  const el = document.getElementById('recent-words');
+  if (!words.length) { el.innerHTML = '<div class="empty-state">아직 저장된 단어가 없어요<br>첫 단어를 추가해보세요!</div>'; return; }
+  el.innerHTML = '<div class="section-title">최근 저장 단어</div>' +
+    words.map(w => `
+      <div class="word-card">
+        <div style="flex:1">
+          <div class="word-text">${w.word} <span style="font-size:12px;color:#555;font-weight:400">${w.pos||''}</span></div>
+          <div class="word-meaning">${w.meaning_ko}</div>
+        </div>
+        <span class="badge">${new Date(w.addedAt).toLocaleDateString('ko')}</span>
+      </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// QUIZ
+// ═══════════════════════════════════════
+let currentQuizIndex = 0, quizItems = [], quizAnswered = false;
+
+async function renderQuiz() {
+  quizItems = await getDueItems();
+  const container = document.getElementById('quiz-container');
+  if (!quizItems.length) {
+    container.innerHTML = `<div class="no-quiz"><div class="icon">🎬</div><h3>오늘 퀴즈 없음!</h3><p>복습할 단어가 아직 없어요.<br>단어를 추가하면 일정에 맞춰<br>자동으로 퀴즈가 생성돼요.</p></div>`;
+    return;
+  }
+  if (currentQuizIndex >= quizItems.length) {
+    container.innerHTML = `<div class="no-quiz"><div class="icon">🏆</div><h3>오늘 복습 완료!</h3><p>총 ${quizItems.length}개 단어를 복습했어요.<br>잘 하셨어요!</p><button class="btn-quiz" style="margin-top:24px;max-width:200px" onclick="currentQuizIndex=0;renderQuiz()">다시 보기</button></div>`;
+    return;
+  }
+
+  const item = quizItems[currentQuizIndex];
+  const w = item.word, type = item.type;
+  quizAnswered = false;
+  const pct = Math.round((currentQuizIndex / quizItems.length) * 100);
+  container.innerHTML = `
+    <div class="progress-bar-wrap">
+      <div class="progress-bar"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <div class="progress-label">${currentQuizIndex+1} / ${quizItems.length}</div>
+    </div>
+    <div class="quiz-wrap">
+      <div class="quiz-meta">${SCHEDULE[item.stepIndex].label} 복습 · ${type==='word_to_meaning'?'단어 → 뜻':'뜻 → 단어'}</div>
+      <div class="quiz-card">
+        <div class="quiz-prompt-label">${type==='word_to_meaning'?'이 단어의 뜻은?':'이 뜻의 단어는?'}</div>
+        <div class="quiz-prompt ${type==='meaning_to_word'?'meaning-prompt':''}">${type==='word_to_meaning'?w.word:w.meaning_ko}</div>
+        ${type==='word_to_meaning'&&w.pos?`<div style="font-size:12px;color:#555;margin-top:4px">${w.pos}</div>`:''}
+      </div>
+      <div class="quiz-input-wrap" style="margin-bottom:16px">
+        <input type="text" id="quiz-answer" placeholder="${type==='word_to_meaning'?'한국어 뜻 입력...':'영어 단어 입력...'}" onkeydown="if(event.key==='Enter')checkAnswer()">
+      </div>
+      <div id="quiz-result-area"></div>
+      <div class="btn-row">
+        <button class="btn-quiz secondary" onclick="skipQuiz()">모르겠어요</button>
+        <button class="btn-quiz" id="quiz-action-btn" onclick="checkAnswer()">확인</button>
+      </div>
+    </div>`;
+  setTimeout(() => { const i = document.getElementById('quiz-answer'); if(i) i.focus(); }, 100);
+}
+
+function checkAnswer() {
+  if (quizAnswered) { nextQuiz(); return; }
+  const item = quizItems[currentQuizIndex];
+  const w = item.word, type = item.type;
+  const answerEl = document.getElementById('quiz-answer');
+  const userAnswer = answerEl.value.trim().toLowerCase();
+  if (!userAnswer) return;
+  quizAnswered = true; answerEl.disabled = true;
+
+  const correctRaw = type==='word_to_meaning' ? w.meaning_ko : w.word;
+  const correct = correctRaw.toLowerCase();
+  const words = correct.split(/[\s,\/·]+/);
+  const isCorrect = words.some(mw => mw.length>1 && userAnswer.includes(mw)) || userAnswer===correct;
+
+  const resultArea = document.getElementById('quiz-result-area');
+  if (isCorrect) {
+    resultArea.innerHTML = `<div class="quiz-result correct"><div class="result-icon">✅</div><div class="result-word">${correctRaw}</div>${w.example?`<div class="result-meaning" style="margin-top:8px;font-style:italic">"${w.example}"</div>`:''}${w.example_ko?`<div class="result-meaning">${w.example_ko}</div>`:''}</div>`;
+    markStepDone(item); showToast('정답! 🎉');
+  } else {
+    resultArea.innerHTML = `<div class="quiz-result wrong"><div class="result-icon">❌</div><div style="font-size:13px;color:var(--muted);margin-bottom:4px">정답은:</div><div class="result-word">${correctRaw}</div>${w.example?`<div class="result-meaning" style="font-style:italic">"${w.example}"</div>`:''}</div>`;
+    showToast('다음엔 맞을 수 있어요!');
+  }
+  document.getElementById('quiz-action-btn').textContent = '다음 →';
+}
+
+function skipQuiz() {
+  if (quizAnswered) { nextQuiz(); return; }
+  const item = quizItems[currentQuizIndex];
+  const correctRaw = item.type==='word_to_meaning' ? item.word.meaning_ko : item.word.word;
+  quizAnswered = true;
+  document.getElementById('quiz-result-area').innerHTML = `<div class="quiz-result wrong"><div class="result-icon">💡</div><div style="font-size:13px;color:var(--muted);margin-bottom:4px">정답:</div><div class="result-word">${correctRaw}</div></div>`;
+  document.getElementById('quiz-action-btn').textContent = '다음 →';
+  document.getElementById('quiz-answer').disabled = true;
+}
+
+function nextQuiz() { currentQuizIndex++; renderQuiz(); }
+
+async function markStepDone(item) {
+  const words = await loadWords();
+  const w = words.find(w => w.id === item.word.id);
+  if (!w) return;
+  if (!w.completedSteps) w.completedSteps = [];
+  if (!w.completedSteps.includes(item.stepIndex)) w.completedSteps.push(item.stepIndex);
+  await dbPut(w); await updateStats();
+}
+
+// ═══════════════════════════════════════
+// WORD LIST
+// ═══════════════════════════════════════
+async function renderWordList() {
+  const words = await loadWords();
+  const container = document.getElementById('word-list-container');
+  if (!words.length) { container.innerHTML = '<div class="empty-state">저장된 단어가 없어요</div>'; return; }
+  const due = await getDueItems();
+  const dueIds = new Set(due.map(d => d.word.id));
+  container.innerHTML = `<div class="section-title">${words.length}개 단어</div>` +
+    words.map(w => {
+      const allDone = w.completedSteps && w.completedSteps.length >= SCHEDULE.length;
+      const isDue = dueIds.has(w.id);
+      const badge = allDone ? '<span class="badge done">완료 ✓</span>' : isDue ? '<span class="badge due">복습 있음</span>' : '<span class="badge">대기중</span>';
+      return `<div class="word-card"><div style="flex:1"><div class="word-text">${w.word} <span style="font-size:11px;color:#555">${w.pos||''}</span></div><div class="word-meaning">${w.meaning_ko}</div>${w.example?`<div class="word-example">${w.example}</div>`:''}</div>${badge}<button class="delete-btn" onclick="deleteWord(${w.id})">✕</button></div>`;
+    }).join('');
+}
+
+async function deleteWord(id) {
+  await dbDel(id);
+  await renderWordList(); await renderRecentWords(); await updateStats();
+  showToast('단어가 삭제됐어요');
+}
+
+// ═══════════════════════════════════════
+// SCHEDULE
+// ═══════════════════════════════════════
+async function renderSchedule() {
+  const words = await loadWords();
+  const desc = [
+    {day:1,type:'뜻 퀴즈',desc:'뜻 보고 단어 맞추기',icon:'📖'},
+    {day:2,type:'단어 퀴즈',desc:'단어 보고 뜻 맞추기',icon:'✏️'},
+    {day:5,type:'뜻 퀴즈',desc:'뜻 보고 단어 맞추기',icon:'📖'},
+    {day:10,type:'단어 퀴즈',desc:'단어 보고 뜻 맞추기',icon:'🎯'},
+  ];
+  let html = `<div class="schedule-header"><div style="font-size:28px">📅</div><div><h3 style="font-size:15px;font-weight:600">복습 스케줄</h3><p style="font-size:12px;color:var(--muted);margin-top:2px">저장일 기준 자동 스케줄링</p></div></div>
+    <div class="section-title">복습 규칙</div><div class="timeline">`;
+  desc.forEach(s => {
+    html += `<div class="tl-item"><div class="tl-dot"></div><div class="tl-card"><div class="tl-day">${s.icon} 저장 후 +${s.day}일</div><div class="tl-quiz-type">${s.type} — ${s.desc}</div></div></div>`;
+  });
+  html += '</div>';
+  if (words.length) {
+    html += '<div class="section-title" style="margin-top:24px">단어별 현황</div>';
+    words.forEach(w => {
+      html += `<div style="background:var(--card);border-radius:10px;padding:14px 16px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-weight:600;font-size:16px">${w.word}</span><span style="font-size:12px;color:var(--muted)">${new Date(w.addedAt).toLocaleDateString('ko')}</span></div><div style="display:flex;gap:6px">`;
+      SCHEDULE.forEach((s,si) => {
+        const done = w.completedSteps && w.completedSteps.includes(si);
+        const avail = Date.now() >= w.addedAt + s.day * 86400000;
+        const color = done ? 'var(--green)' : avail ? 'var(--yellow)' : '#333';
+        html += `<span style="flex:1;text-align:center;padding:6px 4px;border-radius:6px;background:${color};color:${done||avail?'#000':'#555'};font-size:11px;font-weight:600">+${s.day}일<br>${done?'✓':avail?'!':'○'}</span>`;
+      });
+      html += '</div></div>';
+    });
+  }
+  document.getElementById('schedule-container').innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// BACKUP
+// ═══════════════════════════════════════
+async function exportData() {
+  const words = await loadWords();
+  if (!words.length) { showToast('저장된 단어가 없어요'); return; }
+  const json = JSON.stringify({ version:2, exportedAt: new Date().toISOString(), words }, null, 2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([json], { type:'application/json' }));
+  a.download = `vocabflix_${new Date().toLocaleDateString('ko').replace(/\./g,'-').trim()}.json`;
+  a.click();
+  showToast(`${words.length}개 단어 내보내기 완료!`);
+}
+
+async function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const words = data.words || data;
+    let added = 0;
+    for (const w of words) { if (w.id && w.word && w.meaning_ko) { await dbPut(w); added++; } }
+    await updateStats(); await renderRecentWords();
+    showToast(`${added}개 단어 불러오기 완료!`);
+  } catch { showToast('파일 형식이 올바르지 않아요'); }
+  e.target.value = '';
+}
+
+// ═══════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'quiz') { currentQuizIndex = 0; renderQuiz(); }
+  if (name === 'list') renderWordList();
+  if (name === 'schedule') renderSchedule();
+  updateStats();
+}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+async function init() {
+  await openDB();
+  await updateStats();
+  await renderRecentWords();
+  await checkQuizBanner();
+
+  // 알림 프롬프트
+  if (shouldShowNotifPrompt()) {
+    document.getElementById('notif-prompt').classList.add('visible');
+  } else if (Notification.permission === 'granted') {
+    scheduleLocalReminders();
+  }
+
+  // 배너 2시간마다 재확인
+  setInterval(checkQuizBanner, 2 * 60 * 60 * 1000);
+}
+
+init();
+</script>
+
+</body>
+</html>
